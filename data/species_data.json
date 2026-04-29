@@ -1,0 +1,70 @@
+{
+  "ecosystem": "Maldives Atoll",
+  "environmental_factors": {
+    "coral_health": 1.0,
+    "mangrove_density": 1.0,
+    "water_temp": 28
+  },
+  "species": [
+    {
+      "id": "prod_01",
+      "name": "Seagrass & Algae",
+      "trophic_level": 1,
+      "energy_value": 5,
+      "growth_rate": 1.5,
+      "starting_pop": 1000,
+      "habitat_dependency": "coral_health"
+    },
+    {
+      "id": "herb_01",
+      "name": "Parrotfish",
+      "trophic_level": 2,
+      "prey": ["prod_01"],
+      "energy_value": 25,
+      "growth_rate": 0.8,
+      "starting_pop": 200,
+      "keystone_factor": "coral_cleaning"
+    },
+    {
+      "id": "meso_01",
+      "name": "Grouper",
+      "trophic_level": 3,
+      "prey": ["herb_01"],
+      "energy_value": 50,
+      "growth_rate": 0.4,
+      "starting_pop": 50
+    },
+    {
+      "id": "shark_01",
+      "name": "Juvenile Blacktip Shark",
+      "trophic_level": 4,
+      "prey": ["herb_01", "meso_01"],
+      "energy_value": 150,
+      "growth_rate": 0.2,
+      "starting_pop": 15,
+      "nursery_dependency": "mangrove_density"
+    },
+    {
+      "id": "apex_01",
+      "name": "Tiger Shark",
+      "trophic_level": 5,
+      "prey": ["shark_01"],
+      "energy_value": 500,
+      "growth_rate": 0.05,
+      "starting_pop": 2
+    }
+
+    "human_impact_events": {
+    "overfishing": {
+        "target_id": "herb_01",
+        "population_reduction": 0.5,
+        "description": "Commercial fishing nets have cleared the reef of Parrotfish."
+      },
+    "shark_finning": {
+        "target_id": "shark_01",
+        "population_reduction": 0.8,
+        "description": "Poaching has decimated the juvenile blacktip population."
+      }
+    }
+  ]
+}
