@@ -36,7 +36,7 @@ The simulation logic is built upon the following biological relationships:
 
 ---
 
-## 🚀 Key Features
+## Key Features
 - **Real-time Simulation:** A dynamic state machine handling species interaction.
 - **Interactive Polling:** A "Mentimeter-style" interface that pauses the sea to inject user-voted variables.
 - **AI Anomaly Detector:** A logic engine that broadcasts alerts when population shifts exceed $3\sigma$ (3 standard deviations).
@@ -44,7 +44,7 @@ The simulation logic is built upon the following biological relationships:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```text
 /
 ├── index.html          # Main Entry Point
