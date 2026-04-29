@@ -42,16 +42,3 @@ The simulation logic is built upon the following biological relationships:
 - **AI Anomaly Detector:** A logic engine that broadcasts alerts when population shifts exceed $3\sigma$ (3 standard deviations).
 - **Shark Detection Pipeline:** Visual identification of juvenile sharks using simulated BRUV (Baited Remote Underwater Video) feeds.
 
----
-
-## Project Structure
-```text
-/
-├── index.html          # Main Entry Point
-├── /css                # Stylesheets
-├── /js
-│   ├── engine.js       # Simulation logic & math
-│   ├── interaction.js  # Polling & Modal systems
-│   ├── vision.js       # AI Bounding box simulation
-│   └── data.js         # JSON-based species configuration
-└── /assets             # Species icons and environmental textures
