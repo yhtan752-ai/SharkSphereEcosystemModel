@@ -26,8 +26,8 @@ The simulation logic is built upon the following biological relationships:
 
 ---
 
-## 🛠️ Technical Stack
-* **Frontend:** HTML5, CSS3 (Tailwind CSS), JavaScript (ES6+)
+## Technical Stack
+* **Frontend:** HTML5, CSS , JavaScript
 * **Rendering:** HTML5 Canvas API
 * **Data Visualization:** Chart.js (Real-time population tracking)
 * **Math Logic:** Modified Lotka-Volterra Predator-Prey Equations
