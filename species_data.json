@@ -53,5 +53,18 @@
       "growth_rate": 0.05,
       "starting_pop": 2
     }
+
+    "human_impact_events": {
+    "overfishing": {
+        "target_id": "herb_01",
+        "population_reduction": 0.5,
+        "description": "Commercial fishing nets have cleared the reef of Parrotfish."
+      },
+    "shark_finning": {
+        "target_id": "shark_01",
+        "population_reduction": 0.8,
+        "description": "Poaching has decimated the juvenile blacktip population."
+      }
+}
   ]
 }
