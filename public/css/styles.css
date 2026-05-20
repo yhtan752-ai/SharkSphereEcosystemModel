@@ -28,6 +28,68 @@ html, body {
 }
 
 
+/* general */
+
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#app .background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../assets/bg/static_btrf_reef.png');
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+  opacity: 1 !important;
+}
+
+#app .content,
+#app .character-bottom-left {
+  transition: opacity 0.4s ease-in-out;
+  opacity: 1;
+  will-change: opacity;
+}
+
+#app section.fade-out .content,
+#app section.fade-out .character-bottom-left {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#app section.fade-in .content,
+#app section.fade-in .character-bottom-left {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* @starting-style defines the initial state for newly inserted elements */
+/* This allows the fade-in transition to work when content first appears */
+@starting-style {
+  #app section.fade-in .content,
+  #app section.fade-in .character-bottom-left {
+    opacity: 0;
+  }
+}
+
+/* tint */
+#app .background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+  z-index: 0;
+}
+
+
 
 
 
@@ -45,35 +107,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.6s ease-in-out;
-}
-
-.landing-page.active {
-  opacity: 1;
-}
-
-.background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('../assets/bg/static_btrf_reef.png');
-  background-size: cover;
-  background-position: center;
-  z-index: -1;
-}
-
-.background::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.2);
-  z-index: 1;
+  overflow: hidden;
 }
 
 .content {
@@ -120,20 +154,6 @@ html, body {
   box-shadow: 0 8px 4px 2px rgba(0, 0, 0, 0.25);
 }
 
-.page {
-  display: none;
-  opacity: 0;
-  transition: opacity 0.6s ease-in-out;
-}
-
-.page.active {
-  display: block;
-  opacity: 1;
-}
-
-
-
-
 
 
 /* *************************** */
@@ -146,119 +166,18 @@ html, body {
   position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.6s ease-in-out;
+  overflow: hidden;
 }
 
-.conversation-page.active {
-  opacity: 1;
-}
-
-.conversation-content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  width: 90%;
-  max-width: 1200px;
-  height: 100%;
-  padding: 40px;
-}
-
-.avatar-character {
-  width: 200px;
-  height: 200px;
-  background-color: #d8d8d8;
-  border-radius: 50%;
-  flex-shrink: 0;
-  position: relative;
-  margin-top: 20px;
-}
-
-.avatar-character::before {
-  content: '';
+.character-bottom-left {
   position: absolute;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 80px;
-  background-color: #c0c0c0;
-  border-radius: 50%;
+  bottom: 0;
+  left: 20px;
+  z-index: 2;
 }
 
-.avatar-character::after {
-  content: '';
-  position: absolute;
-  top: 110px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 80px;
-  background-color: #c0c0c0;
-  border-radius: 50%;
-}
-
-.speech-bubbles {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  flex: 1;
-  position: relative;
+.character-sprite {
+  display: block;
   max-height: 400px;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-
-.speech-bubble {
-  background-color: #ffffff;
-  padding: 30px 40px;
-  border-radius: 25px;
-  font-size: 32px;
-  font-weight: 900;
-  color: #000000;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  opacity: 0;
-  display: none;
-  transition: opacity 0.4s ease-in-out;
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-}
-
-.speech-bubble.active {
-  display: flex;
-  opacity: 1;
-}
-
-.next-button {
-  position: absolute;
-  bottom: 40px;
-  left: 40px;
-  padding: 12px 28px;
-  background-color: #4CA4FF;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(76, 164, 255, 0.4);
-  transition: all 0.3s ease;
-}
-
-.next-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(76, 164, 255, 0.6);
-}
-
-.next-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(76, 164, 255, 0.3);
+  object-fit: contain;
 }
