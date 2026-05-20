@@ -1,107 +1,134 @@
-// SPA class setup
-// the way this works is that theres a single page with different sections (landing, mission, team, etc.)
-// and it shows/hides these sections based on user interaction (like clicking the lets go button)
-// this allows it to be a smooth, app-like experience without needing to reload the page through nav links
-
-class OceanResearchApp {
-  constructor() {
-    this.currentPage = 'landing';
-    this.currentBubbleIndex = 0;
-    this.init();
+class Router {
+  constructor(appElement) {
+    this.appElement = appElement;
+    this.currentPage = null;
+    this.isTransitioning = false;
   }
 
-  init() {
-    this.setupEventListeners();
-  }
+  async navigate(pageName) {
+    // Prevent navigating to same page or during transition
+    if (this.isTransitioning || this.currentPage === pageName) return;
 
-  setupEventListeners() {
-    const ctaButton = document.getElementById('cta-button');
-    const nextButton = document.getElementById('next-button');
-    
-    if (ctaButton) {
-      ctaButton.addEventListener('click', () => this.handleCtaClick());
-      ctaButton.addEventListener('mouseenter', () => this.buttonHoverIn(ctaButton));
-      ctaButton.addEventListener('mouseleave', () => this.buttonHoverOut(ctaButton));
+    this.isTransitioning = true;
+
+    try {
+      // Step 1: Fade out current page
+      await this.fadeOut();
+
+      // Step 2: Load new page
+      await this.loadPage(pageName);
+
+      // Step 3: Fade in new page
+      await this.fadeIn();
+
+      // Update current page
+      this.currentPage = pageName;
+    } catch (error) {
+      console.error(`Navigation failed: ${error.message}`);
+    } finally {
+      this.isTransitioning = false;
     }
+  }
 
-    if (nextButton) {
-      nextButton.addEventListener('click', () => this.showNextBubble());
+  async loadPage(pageName) {
+    try {
+      const response = await fetch(`pages/${pageName}.html`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      
+      // Replace entire app content with new page body
+      this.appElement.innerHTML = doc.body.innerHTML;
+    } catch (error) {
+      throw new Error(`Failed to load page ${pageName}: ${error.message}`);
+    }
+  }
+
+  async fadeOut() {
+    const section = this.appElement.querySelector('section');
+    if (!section) return;
+
+    section.classList.add('fade-out');
+    section.classList.remove('fade-in');
+
+    await this.delay(400);
+  }
+
+  async fadeIn() {
+    const section = this.appElement.querySelector('section');
+    if (!section) return;
+
+    section.classList.remove('fade-out');
+    section.classList.add('fade-in');
+
+    await this.delay(400);
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+class App {
+  constructor() {
+    this.appElement = document.getElementById('app');
+    this.router = new Router(this.appElement);
+  }
+
+  async init() {
+    try {
+      // Load initial page without transition
+      await this.router.loadPage('landing');
+      
+      // Immediately show it (no fade-in animation on first load)
+      const section = this.appElement.querySelector('section');
+      if (section) {
+        section.classList.add('fade-in');
+      }
+      
+      this.router.currentPage = 'landing';
+      
+      // Attach event listeners
+      this.bindEvents();
+    } catch (error) {
+      console.error('Failed to initialize app:', error);
+    }
+  }
+
+  bindEvents() {
+    // Use event delegation for dynamic content
+    // This way listeners persist across page changes
+    this.appElement.addEventListener('click', (e) => {
+      this.handleDelegatedClick(e);
+    });
+  }
+
+  handleDelegatedClick(e) {
+    if (e.target.id === 'cta-button') {
+      this.handleCtaClick();
     }
   }
 
   handleCtaClick() {
-    console.log('Let\'s Go! button clicked');
-    this.navigateTo('conversation');
-    this.showClickFeedback();
-  }
-
-  buttonHoverIn(button) {
-    // hover effects
-  }
-
-  buttonHoverOut(button) {
-    // hover effects 2
-  }
-
-  showClickFeedback() {
+    // Show visual feedback
     const button = document.getElementById('cta-button');
-    button.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-      button.style.transform = '';
-    }, 150);
-  }
-
-  navigateTo(page) {
-    // hide curr page
-    const currentPageEl = document.getElementById(this.currentPage);
-    if (currentPageEl) {
-      currentPageEl.classList.remove('active');
-    }
-
-    // show new page
-    const newPageEl = document.getElementById(page);
-    if (newPageEl) {
-      newPageEl.classList.add('active');
-      this.currentPage = page;
-      window.scrollTo(0, 0);
-      
-      if (page === 'conversation') {
-        this.currentBubbleIndex = 0;
-        this.showBubbleByIndex(0);
-      }
-    }
-  }
-
-  showBubbleByIndex(index) {
-    const bubbles = document.querySelectorAll('.speech-bubble');
-    bubbles.forEach((bubble, i) => {
-      if (i === index) {
-        bubble.classList.add('active');
-      } else {
-        bubble.classList.remove('active');
-      }
-    });
-  }
-
-  showNextBubble() {
-    const bubbles = document.querySelectorAll('.speech-bubble');
-    if (this.currentBubbleIndex < bubbles.length - 1) {
-      this.currentBubbleIndex++;
-      this.showBubbleByIndex(this.currentBubbleIndex);
-      
-      // Auto-scroll to show the active bubble
+    if (button) {
+      button.style.transform = 'scale(0.95)';
       setTimeout(() => {
-        const activeBubble = bubbles[this.currentBubbleIndex];
-        const speechBubblesContainer = document.querySelector('.speech-bubbles');
-        if (activeBubble && speechBubblesContainer) {
-          activeBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-      }, 50);
+        button.style.transform = '';
+      }, 150);
     }
+
+    // Navigate after brief delay
+    setTimeout(() => {
+      this.router.navigate('conversation');
+    }, 150);
   }
 }
 
-// init app when DOM has finished loading
+// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  new OceanResearchApp();
+  const app = new App();
+  app.init();
 });
