@@ -1,28 +1,27 @@
 class Router {
-  constructor(appElement) {
+  constructor(appElement, app) {
     this.appElement = appElement;
+    this.app = app;
     this.currentPage = null;
     this.isTransitioning = false;
   }
 
   async navigate(pageName) {
-    // Prevent navigating to same page or during transition
+    // prevent navigating to same page or during transition
     if (this.isTransitioning || this.currentPage === pageName) return;
 
     this.isTransitioning = true;
 
     try {
-      // Step 1: Fade out current page
       await this.fadeOut();
-
-      // Step 2: Load new page
       await this.loadPage(pageName);
-
-      // Step 3: Fade in new page
       await this.fadeIn();
 
-      // Update current page
+      // upd current page
       this.currentPage = pageName;
+      
+      // initialise page content based on page name
+      this.app.initialisePageContent(pageName);
     } catch (error) {
       console.error(`Navigation failed: ${error.message}`);
     } finally {
@@ -38,7 +37,7 @@ class Router {
       const html = await response.text();
       const doc = new DOMParser().parseFromString(html, 'text/html');
       
-      // Replace entire app content with new page body
+      // replace entire app content with new page body
       this.appElement.innerHTML = doc.body.innerHTML;
     } catch (error) {
       throw new Error(`Failed to load page ${pageName}: ${error.message}`);
@@ -73,32 +72,67 @@ class Router {
 class App {
   constructor() {
     this.appElement = document.getElementById('app');
-    this.router = new Router(this.appElement);
+    this.router = new Router(this.appElement, this);
   }
 
   async init() {
     try {
-      // Load initial page without transition
-      await this.router.loadPage('landing');
+      // check for debug page parameter
+      const params = new URLSearchParams(window.location.search);
+      const debugPage = params.get('page');
+      const startPage = debugPage || 'landing';
+
+      await this.router.loadPage(startPage);
       
-      // Immediately show it (no fade-in animation on first load)
       const section = this.appElement.querySelector('section');
       if (section) {
         section.classList.add('fade-in');
       }
       
-      this.router.currentPage = 'landing';
+      this.router.currentPage = startPage;
       
-      // Attach event listeners
+      this.initialisePageContent(startPage);
+      
+      // attach event listeners
       this.bindEvents();
     } catch (error) {
       console.error('Failed to initialize app:', error);
     }
   }
 
+  initialisePageContent(pageName) {
+    if (pageName === 'conversation') {
+      this.initialiseConversation();
+    }
+  }
+
+  initialiseConversation() {
+    const messages = [
+      "Welcome aboard, fellow scientist!",
+      "Today, we are going to explore a very important species.",
+      "This species helps keep coral reef"
+    ];
+
+    const wrapper = this.appElement.querySelector('.messages-wrapper');
+    if (!wrapper) return;
+
+    // clear any existing messages
+    wrapper.innerHTML = '';
+
+    // add messages automatically with staggered timing
+    messages.forEach((text, index) => {
+      setTimeout(() => {
+        const message = document.createElement('div');
+        message.className = 'message';
+        message.textContent = text;
+        wrapper.appendChild(message);
+      }, index * 1000);
+    });
+  }
+
   bindEvents() {
-    // Use event delegation for dynamic content
-    // This way listeners persist across page changes
+    // use event delegation for dynamic content
+    // this way listeners persist across page changes
     this.appElement.addEventListener('click', (e) => {
       this.handleDelegatedClick(e);
     });
@@ -111,7 +145,6 @@ class App {
   }
 
   handleCtaClick() {
-    // Show visual feedback
     const button = document.getElementById('cta-button');
     if (button) {
       button.style.transform = 'scale(0.95)';
@@ -120,14 +153,27 @@ class App {
       }, 150);
     }
 
-    // Navigate after brief delay
+    // navigate after delay
     setTimeout(() => {
       this.router.navigate('conversation');
     }, 150);
   }
+
+  addMessage(text) {
+    const wrapper = this.appElement.querySelector('.messages-wrapper');
+    if (!wrapper) return;
+
+    const message = document.createElement('div');
+    message.className = 'message';
+    message.textContent = text;
+    wrapper.appendChild(message);
+
+    // Auto-scroll to bottom
+    wrapper.scrollTop = wrapper.scrollHeight;
+  }
 }
 
-// Initialize app when DOM is ready
+// init when dom has loaded
 document.addEventListener('DOMContentLoaded', () => {
   const app = new App();
   app.init();
