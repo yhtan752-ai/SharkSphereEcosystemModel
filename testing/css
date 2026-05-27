@@ -1,1 +1,54 @@
-
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0f172a;
+    color: #f8fafc;
+    text-align: center;
+    padding: 20px;
+}
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+.video-section {
+    position: relative;
+    display: inline-block;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+button {
+    background-color: #0284c7;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+button:hover {
+    background-color: #0369a1;
+}
+.metric-card {
+    background-color: #1e293b;
+    padding: 20px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 20px;
+    border: 1px solid #334155;
+}
+.number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #38bdf8;
+}
