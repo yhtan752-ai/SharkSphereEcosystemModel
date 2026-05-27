@@ -4,48 +4,44 @@ const video = document.getElementById('sharkVideo');
 const canvas = document.getElementById('detectionCanvas');
 const ctx = canvas.getContext('2d');
 
-// 1. Initialize and load the 36MB ONNX model into browser memory
+// 1. Initialize ONNX Runtime with WebGL GPU Hardware Acceleration
 async function initModel() {
-    console.log("Loading high-res 1024px ONNX shark weights...");
+    console.log("Initializing ONNX WebGL execution engine...");
     try {
-        // Direct root-relative path execution
-        session = await ort.InferenceSession.create('./my_model.onnx');
-        console.log("Shark model loaded successfully! WebGL/WASM engine active.");
+        // FORCE THE BROWSER TO RUN COMPUTE ON YOUR GRAPHICS CARD (WebGL)
+        const options = { executionProviders: ['webgl'] };
+        session = await ort.InferenceSession.create('./my_model.onnx', options);
+        console.log("GPU Acceleration active! Model loaded successfully.");
     } catch (e) {
-        console.error("Failed to initialize ONNX runtime session:", e);
+        console.warn("WebGL failed, falling back to CPU mode:", e);
+        session = await ort.InferenceSession.create('./my_model.onnx');
     }
 }
 
-// 2. Handle Phase 1 to Phase 2 presentation transition state
 function transitionToAI() {
     document.getElementById('phaseTitle').innerText = "Phase 2: Automated AI MaxN Extraction";
-    document.getElementById('phaseDesc').innerText = "YOLO11 is actively standardizing canvas pixel matrices to calculate real-time spatial density.";
+    document.getElementById('phaseDesc').innerText = "YOLO11 is utilizing WebGL GPU channels to run matrix tracking loops natively.";
     document.getElementById('analyticsDisplay').style.display = "block";
     document.getElementById('actionBtn').style.display = "none";
 
-    // Sync canvas sizing parameters directly with the live HTML video player frame layout
     canvas.width = video.videoWidth || 800;
     canvas.height = video.videoHeight || 450;
 
     video.currentTime = 0;
     video.play();
-
-    // Fire off the recursive frames processing matrix loop
-    video.requestVideoFrameCallback(runInferenceLoop);
+    
+    // Begin the high-framerate processing loop
+    runInferenceLoop();
 }
 
-// 3. Core Computer Vision Processing Loop
+// 2. Optimized Processing Loop
 async function runInferenceLoop() {
     if (video.paused || video.ended) return;
 
-    // Clear previous drawing frames canvas layers to eliminate phantom boxes
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     try {
-        // --- PRE-PROCESSING: Convert HTML Video Frame to a 1024x1024 Model Tensor ---
         const inputImgSize = 1024;
         
-        // Create an offscreen temporary memory canvas to square-preprocess image coordinates
+        // Setup temporary high-speed rendering matrix
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = inputImgSize;
         tempCanvas.height = inputImgSize;
@@ -55,91 +51,118 @@ async function runInferenceLoop() {
         const imgData = tempCtx.getImageData(0, 0, inputImgSize, inputImgSize);
         const { data } = imgData;
 
-        // Construct standardized Float32 structural arrays (RGB Channel Isolation)
-        const rChannel = [];
-        const gChannel = [];
-        const bChannel = [];
+        // Optimized flat channel array allocation
+        const floatArray = new Float32Array(3 * inputImgSize * inputImgSize);
+        let rIdx = 0;
+        let gIdx = inputImgSize * inputImgSize;
+        let bIdx = 2 * inputImgSize * inputImgSize;
 
         for (let i = 0; i < data.length; i += 4) {
-            rChannel.push(data[i] / 255.0);     // Normalize R
-            gChannel.push(data[i + 1] / 255.0); // Normalize G
-            gChannel.push(data[i + 2] / 255.0); // Normalize B
+            floatArray[rIdx++] = data[i] / 255.0;
+            floatArray[gIdx++] = data[i + 1] / 255.0;
+            floatArray[bIdx++] = data[i + 2] / 255.0;
         }
 
-        // Merge channels to match YOLOv11 input dimension formats: [1, 3, 1024, 1024]
-        const formattedInputFloatArray = Float32Array.from([...rChannel, ...gChannel, ...bChannel]);
-        const inputTensor = new ort.Tensor('float32', formattedInputFloatArray, [1, 3, inputImgSize, inputImgSize]);
-
-        // --- INFERENCE: Run frame matrix multiplication through the ONNX network weights ---
+        const inputTensor = new ort.Tensor('float32', floatArray, [1, 3, inputImgSize, inputImgSize]);
         const feeds = { [session.inputNames[0]]: inputTensor };
         const outputMap = await session.run(feeds);
         const outputTensor = outputMap[session.outputNames[0]];
         
-        // --- POST-PROCESSING: Isolate bounding arrays from output tensors ---
-        // YOLO outputs shape data structure array format. Let's parse boxes with conf > 0.25
+        // --- FIXED POST-PROCESSING PARSING LOGIC ---
+        // Reshape calculations: YOLO11 outputs shape dimensions [1, 5, 21504]
+        // Row 0: cx, Row 1: cy, Row 2: width, Row 3: height, Row 4: Shark Confidence
+        const outputData = outputTensor.data;
+        const numDetections = outputTensor.dims[2]; 
+        
         let currentFrameSharkCount = 0;
-        const rawOutputData = outputTensor.data; 
-        
-        // Loop variables to trace prediction boxes
-        const totalOutputElements = outputTensor.dims[2]; // Number of candidate bounding locations
-        
-        for (let i = 0; i < totalOutputElements; i++) {
-            // Check confidence score
-            const confidence = rawOutputData[4 * totalOutputElements + i];
+        let candidates = [];
+
+        // Isolate valid targets passing confidence filtering threshold 
+        for (let i = 0; i < numDetections; i++) {
+            const confidence = outputData[4 * numDetections + i]; // Row 4
             
-            if (confidence > 0.25) { 
-                currentFrameSharkCount++;
-
-                // Map relative network coordinates back onto live HTML layout dimensions
-                let cx = rawOutputData[0 * totalOutputElements + i] * (canvas.width / inputImgSize);
-                let cy = rawOutputData[1 * totalOutputElements + i] * (canvas.height / inputImgSize);
-                let w  = rawOutputData[2 * totalOutputElements + i] * (canvas.width / inputImgSize);
-                let h  = rawOutputData[3 * totalOutputElements + i] * (canvas.height / inputImgSize);
+            if (confidence > 0.35) { // 35% Confidence constraint thresholds
+                let cx = outputData[0 * numDetections + i] * (canvas.width / inputImgSize);
+                let cy = outputData[1 * numDetections + i] * (canvas.height / inputImgSize);
+                let w  = outputData[2 * numDetections + i] * (canvas.width / inputImgSize);
+                let h  = outputData[3 * numDetections + i] * (canvas.height / inputImgSize);
                 
-                let x = cx - w / 2;
-                let y = cy - h / 2;
-
-                // --- RENDERING: Draw tracking targets onto user UI canvas elements ---
-                ctx.strokeStyle = '#00ffcc'; // Clean neon marine border lines
-                ctx.lineWidth = 3;
-                ctx.strokeRect(x, y, w, h);
-
-                // Draw background box text label anchoring frames
-                ctx.fillStyle = 'rgba(0, 255, 204, 0.85)';
-                ctx.font = 'bold 12px sans-serif';
-                const labelText = `Blacktip Reef Shark: ${Math.round(confidence * 100)}%`;
-                const textWidth = ctx.measureText(labelText).width;
-                
-                ctx.fillRect(x - 1, y - 20, textWidth + 10, 20);
-                ctx.fillStyle = '#0f172a';
-                ctx.fillText(labelText, x + 4, y - 6);
+                candidates.push({
+                    x: cx - w / 2,
+                    y: cy - h / 2,
+                    w: w,
+                    h: h,
+                    score: confidence
+                });
             }
         }
 
-        // --- MATHEMATICAL MAXN OVERRIDE EVALUATION ---
+        // Apply Non-Maximum Suppression (NMS) simulation to filter duplicate overlapping boxes
+        candidates.sort((a, b) => b.score - a.score);
+        let selectedBoxes = [];
+        while (candidates.length > 0) {
+            let box = candidates.shift();
+            selectedBoxes.push(box);
+            candidates = candidates.filter(item => {
+                // Calculate Intersection over Union (IoU)
+                let x1 = Math.max(box.x, item.x);
+                let y1 = Math.max(box.y, item.y);
+                let x2 = Math.min(box.x + box.w, item.x + item.w);
+                let y2 = Math.min(box.y + box.h, item.y + item.h);
+                let interW = Math.max(0, x2 - x1);
+                let interH = Math.max(0, y2 - y1);
+                let interArea = interW * interH;
+                let boxArea = box.w * box.h;
+                let itemArea = item.w * item.h;
+                let unionArea = boxArea + itemArea - interArea;
+                return (interArea / unionArea) < 0.45; // Filter box overlaps greater than 45%
+            });
+        }
+
+        // --- CLEAR CANVAS & RENDER SMOOTH ALIGNED BOXES ---
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        currentFrameSharkCount = selectedBoxes.length;
+
+        selectedBoxes.forEach(box => {
+            // Draw smooth bounding outline box
+            ctx.strokeStyle = '#00ffcc'; 
+            ctx.lineWidth = 3;
+            ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+            // Text tag layout settings
+            ctx.fillStyle = 'rgba(0, 255, 204, 0.9)';
+            ctx.font = 'bold 13px sans-serif';
+            const text = `Shark: ${Math.round(box.score * 100)}%`;
+            ctx.fillRect(box.x - 1, box.y - 22, ctx.measureText(text).width + 10, 22);
+            
+            ctx.fillStyle = '#0f172a';
+            ctx.fillText(text, box.x + 4, box.y - 6);
+        });
+
+        // --- LIVE METRICS RE-EVALUATION CONTROLS ---
         if (currentFrameSharkCount > maxN) {
             maxN = currentFrameSharkCount;
             document.getElementById('maxnValue').innerText = maxN;
         }
 
-        // Update real-time active frame element indicator labels dynamically
-        let dynamicCounterLabel = document.getElementById('frameCounterLabel');
-        if (!dynamicCounterLabel) {
-            dynamicCounterLabel = document.createElement('p');
-            dynamicCounterLabel.id = 'frameCounterLabel';
-            dynamicCounterLabel.style.fontWeight = '600';
-            dynamicCounterLabel.style.color = '#38bdf8';
-            document.getElementById('analyticsDisplay').insertBefore(dynamicCounterLabel, document.getElementById('maxnValue').parentNode);
+        let label = document.getElementById('frameCounterLabel');
+        if (!label) {
+            label = document.createElement('p');
+            label.id = 'frameCounterLabel';
+            label.style.fontWeight = '700';
+            label.style.fontSize = '1.2rem';
+            label.style.color = '#38bdf8';
+            label.style.margin = '15px 0 5px 0';
+            document.getElementById('analyticsDisplay').insertBefore(label, document.getElementById('maxnValue').parentNode);
         }
-        dynamicCounterLabel.innerText = `Sharks Currently in Frame: ${currentFrameSharkCount}`;
+        label.innerText = `Sharks Currently in Frame: ${currentFrameSharkCount}`;
 
     } catch (err) {
-        console.error("Frame inference tracking error exception caught:", err);
+        console.error("Inference processing error:", err);
     }
 
-    // Recursively handle the next native video frame render index pass
-    video.requestVideoFrameCallback(runInferenceLoop);
+    // Force high-framerate refresh execution matching screen tick timing
+    requestAnimationFrame(runInferenceLoop);
 }
 
-// Fire loading procedure sequence on page visibility load init
 initModel();
