@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shark Abundance Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Shark Abundance Extraction Pipeline</h1>
+        
+        <div class="video-section">
+            <video id="sharkVideo" src="sharks.mp4" controls width="800"></video>
+            <canvas id="detectionCanvas"></canvas>
+        </div>
 
+        <div class="controls">
+            <h2 id="phaseTitle">Phase 1: Human Counting Challenge</h2>
+            <p id="phaseDesc">Watch the video closely and try to count how many juvenile sharks you see!</p>
+            <button id="actionBtn" onclick="transitionToAI()">Run AI MaxN Model</button>
+        </div>
+
+        <div id="analyticsDisplay" style="display: none;">
+            <div class="metric-card">
+                <h3>Overall Video MaxN Peak</h3>
+                <div id="maxnValue" class="number">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
