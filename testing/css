@@ -5,26 +5,46 @@ body {
     text-align: center;
     padding: 20px;
 }
+
 .container {
     max-width: 900px;
     margin: 0 auto;
 }
+
 .video-section {
-    position: relative;
-    display: inline-block;
     margin: 20px 0;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    display: inline-block;
 }
-canvas {
+
+/* FIXED: Establishes a strict relative boundary so child absolute elements snap to it */
+.video-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 800px; /* Matches your HTML video component width layout parameter */
+    max-width: 100%;
+}
+
+/* FIXED: Ensures video occupies base dimensions and scales layout cleanly */
+#sharkVideo {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* FIXED: Forces bounding boxes to stack perfectly over the running video pixels */
+#detectionCanvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: none; /* Allows mouse clicks to pass right through to video play/pause controls */
+    z-index: 10;          /* Places the neon lines directly in front of the video track layers */
 }
+
 button {
     background-color: #0284c7;
     color: white;
@@ -36,9 +56,11 @@ button {
     font-weight: 600;
     transition: background 0.2s;
 }
+
 button:hover {
     background-color: #0369a1;
 }
+
 .metric-card {
     background-color: #1e293b;
     padding: 20px;
@@ -47,6 +69,7 @@ button:hover {
     margin-top: 20px;
     border: 1px solid #334155;
 }
+
 .number {
     font-size: 3rem;
     font-weight: bold;
