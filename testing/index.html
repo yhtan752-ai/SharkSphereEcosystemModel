@@ -12,7 +12,7 @@
         
         <div class="video-section">
             <div class="video-wrapper">
-                <video id="sharkVideo" src="sharks.mp4" controls width="800"></video>
+                <video id="sharkVideo" src="sharks.mp4" controls width="800" preload="auto"></video>
             </div>
         </div>
 
@@ -26,21 +26,34 @@
     <script>
         function runAIPipeline() {
             const video = document.getElementById('sharkVideo');
-            
             const title = document.getElementById('phaseTitle');
             const desc = document.getElementById('phaseDesc');
             const btn = document.getElementById('actionBtn');
 
-            // 1. Clean presentation text swap
+            if (!video) return;
+
+            // 1. UI Text Content Transition
             if (title) title.innerText = "Phase 2: Automated AI MaxN Extraction";
             if (desc) desc.innerText = "YOLO11 and ByteTrack channels are rendering tracking boxes natively.";
             if (btn) btn.style.display = "none";
 
-            // 2. Instantly switch the video source parameter to your smooth python output file
-            if (video) {
-                video.src = "tracked_sharks.mp4";
-                video.currentTime = 0;
-                video.play();
+            // 2. Clear out any old playing streams and force-load the new target asset structure
+            video.pause();
+            video.src = "tracked_sharks.mp4";
+            video.load(); // Forces browser to establish network pipelines to the new file before playing
+
+            // 3. ASYNCHRONOUS PROMISE HANDLING (From your documentation examples)
+            const playPromise = video.play();
+
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log("Tracked video stream handshake completed. Playback started smoothly!");
+                    })
+                    .catch(error => {
+                        console.error("Playback engine Promise was rejected:", error);
+                        console.warn("Hint: If you see a 404 error above, 'tracked_sharks.mp4' is missing from your GitHub online folder.");
+                    });
             }
         }
     </script>
