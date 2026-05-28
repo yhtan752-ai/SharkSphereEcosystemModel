@@ -1,27 +1,36 @@
 let session = null;
 let maxN = 0;
-let isProcessing = false; // Flag to prevent frame stacking/freezing
+let isProcessing = false;
+let frameCounter = 0; // Tracks passing frames to handle skipping logic
+
 const video = document.getElementById('sharkVideo');
 const canvas = document.getElementById('detectionCanvas');
 const ctx = canvas.getContext('2d');
 
-// 1. Initialize ONNX Runtime with WebGL GPU Hardware Acceleration
+// 1. Initialize ONNX Runtime with Auto-Fallback Engine
 async function initModel() {
-    console.log("Initializing ONNX WebGL execution engine...");
+    console.log("Initializing Stable ONNX Engine...");
     try {
-        // FORCE THE BROWSER TO RUN COMPUTE ON YOUR GRAPHICS CARD
-        const options = { executionProviders: ['webgl'] };
-        session = await ort.InferenceSession.create('./my_model.onnx', options);
-        console.log("GPU Acceleration active! WebGL engine running smoothly.");
+        session = await ort.InferenceSession.create('./my_model.onnx', { 
+            executionProviders: ['webgl', 'wasm'] 
+        });
+        console.log("ONNX WebGL/WASM Session initialized successfully.");
     } catch (e) {
-        console.warn("WebGL failed, falling back to CPU mode:", e);
-        session = await ort.InferenceSession.create('./my_model.onnx');
+        console.warn("WebGL failed, switching to WASM Core CPU mode:", e);
+        try {
+            session = await ort.InferenceSession.create('./my_model.onnx', { 
+                executionProviders: ['wasm'] 
+            });
+            console.log("WASM Core Engine active.");
+        } catch (err) {
+            console.error("Critical error: Unable to load ONNX model weights:", err);
+        }
     }
 }
 
 function transitionToAI() {
     document.getElementById('phaseTitle').innerText = "Phase 2: Automated AI MaxN Extraction";
-    document.getElementById('phaseDesc').innerText = "YOLO11 is utilizing WebGL GPU channels to run matrix tracking loops natively.";
+    document.getElementById('phaseDesc').innerText = "YOLO11 is actively decoding matrix tensor arrays to map real-time coordinates.";
     document.getElementById('analyticsDisplay').style.display = "block";
     document.getElementById('actionBtn').style.display = "none";
 
@@ -31,28 +40,26 @@ function transitionToAI() {
     video.currentTime = 0;
     video.play();
     
-    // Kick off the optimized frame-skipping rendering loop
-    requestAnimationFrame(runInferenceLoop);
+    runInferenceLoop();
 }
 
-// 2. Optimized High-Speed Processing Loop
+// 2. High-Performance Frame-Skipping Parsing Engine
 async function runInferenceLoop() {
     if (video.paused || video.ended) {
         isProcessing = false;
         return;
-        
-        frameCounter++;
+    }
+
+    // --- HIGH SPEED FRAME SKIPPING PERFORMANCE ADJUSTMENT ---
+    frameCounter++;
     if (frameCounter % 4 !== 0) {
-        // Clear previous drawing frames canvas layers so boxes don't get stuck
+        // Clear previous bounding lines so they don't stutter or stick over moving frames
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Re-draw the last detected boxes if you want, or keep it empty for speed
         requestAnimationFrame(runInferenceLoop);
         return;
     }
 
-    // IF THE GPU IS STILL BUSY WITH THE PREVIOUS FRAME, SKIP THIS TICK (Prevents Freezing!)
-    if (isProcessing) {
+    if (isProcessing || !session) {
         requestAnimationFrame(runInferenceLoop);
         return;
     }
@@ -71,7 +78,6 @@ async function runInferenceLoop() {
         const imgData = tempCtx.getImageData(0, 0, inputImgSize, inputImgSize);
         const { data } = imgData;
 
-        // Optimized flat channel array allocation
         const floatArray = new Float32Array(3 * inputImgSize * inputImgSize);
         let rIdx = 0;
         let gIdx = inputImgSize * inputImgSize;
@@ -86,38 +92,64 @@ async function runInferenceLoop() {
         const inputTensor = new ort.Tensor('float32', floatArray, [1, 3, inputImgSize, inputImgSize]);
         const feeds = { [session.inputNames[0]]: inputTensor };
         
-        // Inference step (runs fast on GPU)
         const outputMap = await session.run(feeds);
         const outputTensor = outputMap[session.outputNames[0]];
-        
-        // YOLO11 outputs shape dimensions [1, 5, 21504]
         const outputData = outputTensor.data;
-        const numDetections = outputTensor.dims[2]; 
         
+        const dims = outputTensor.dims;
+        let numDetections = dims[2];
+        let numRows = dims[1];
+        let isTransposed = false;
+
+        if (dims[1] > dims[2]) {
+            numDetections = dims[1];
+            numRows = dims[2];
+            isTransposed = true;
+        }
+
         let currentFrameSharkCount = 0;
         let candidates = [];
 
-        // Parse coordinates and confidence thresholds
         for (let i = 0; i < numDetections; i++) {
-            const confidence = outputData[4 * numDetections + i]; 
-            
-            if (confidence > 0.40) { // Set to 40% to clean up ghost boxes
-                let cx = outputData[0 * numDetections + i] * (canvas.width / inputImgSize);
-                let cy = outputData[1 * numDetections + i] * (canvas.height / inputImgSize);
-                let w  = outputData[2 * numDetections + i] * (canvas.width / inputImgSize);
-                let h  = outputData[3 * numDetections + i] * (canvas.height / inputImgSize);
-                
+            let cx, cy, w, h, confidence;
+
+            if (!isTransTransposed) {
+                // Format layout structure: [1, 5, 21504]
+                isTransposed = false; 
+                confidence = outputData[4 * numDetections + i];
+                if (confidence > 0.35) {
+                    cx = outputData[0 * numDetections + i];
+                    cy = outputData[1 * numDetections + i];
+                    w  = outputData[2 * numDetections + i];
+                    h  = outputData[3 * numDetections + i];
+                }
+            } else {
+                // Format layout structure: [1, 21504, 5]
+                const rowOffset = i * numRows;
+                confidence = outputData[rowOffset + 4];
+                if (confidence > 0.35) {
+                    cx = outputData[rowOffset + 0];
+                    cy = outputData[rowOffset + 1];
+                    w  = outputData[rowOffset + 2];
+                    h  = outputData[rowOffset + 3];
+                }
+            }
+
+            if (confidence > 0.35) {
+                let scaleX = canvas.width / inputImgSize;
+                let scaleY = canvas.height / inputImgSize;
+
                 candidates.push({
-                    x: cx - w / 2,
-                    y: cy - h / 2,
-                    w: w,
-                    h: h,
+                    x: (cx - w / 2) * scaleX,
+                    y: (cy - h / 2) * scaleY,
+                    w: w * scaleX,
+                    h: h * scaleY,
                     score: confidence
                 });
             }
         }
 
-        // Apply Non-Maximum Suppression (NMS) to clear overlapping duplicate boxes
+        // Apply Non-Maximum Suppression (NMS) to eliminate overlapping duplicate boxes
         candidates.sort((a, b) => b.score - a.score);
         let selectedBoxes = [];
         while (candidates.length > 0) {
@@ -136,7 +168,6 @@ async function runInferenceLoop() {
             });
         }
 
-        // Clear and redraw canvas instantly
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         currentFrameSharkCount = selectedBoxes.length;
 
@@ -154,7 +185,6 @@ async function runInferenceLoop() {
             ctx.fillText(text, box.x + 4, box.y - 6);
         });
 
-        // MaxN Calculation Update
         if (currentFrameSharkCount > maxN) {
             maxN = currentFrameSharkCount;
             document.getElementById('maxnValue').innerText = maxN;
@@ -172,10 +202,10 @@ async function runInferenceLoop() {
         label.innerText = `Sharks Currently in Frame: ${currentFrameSharkCount}`;
 
     } catch (err) {
-        console.error("Inference loop breakdown:", err);
+        console.error("Frame inference processing loop error caught:", err);
     }
 
-    isProcessing = false; // Release lock for next frame pass
+    isProcessing = false;
     requestAnimationFrame(runInferenceLoop);
 }
 
