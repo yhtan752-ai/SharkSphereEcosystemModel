@@ -132,7 +132,7 @@ async function runInferenceLoop() {
             // Text tag layout settings
             ctx.fillStyle = 'rgba(0, 255, 204, 0.9)';
             ctx.font = 'bold 13px sans-serif';
-            const text = `Shark: ${Math.round(box.score * 100)}%`;
+            const text = `Blacktip Reef Shark: ${Math.round(box.score * 100)}%`;
             ctx.fillRect(box.x - 1, box.y - 22, ctx.measureText(text).width + 10, 22);
             
             ctx.fillStyle = '#0f172a';
