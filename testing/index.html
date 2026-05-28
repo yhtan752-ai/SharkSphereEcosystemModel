@@ -27,16 +27,21 @@
         function runAIPipeline() {
             const video = document.getElementById('sharkVideo');
             
-            // 1. Swap user presentation text descriptions
-            document.getElementById('phaseTitle').innerText = "Phase 2: Automated AI MaxN Extraction";
-            document.getElementById('phaseDesc').innerText = "YOLO11 and ByteTrack channels are rendering tracking boxes natively.";
-            document.getElementById('analyticsDisplay').style.display = "block";
-            document.getElementById('actionBtn').style.display = "none";
+            const title = document.getElementById('phaseTitle');
+            const desc = document.getElementById('phaseDesc');
+            const btn = document.getElementById('actionBtn');
+
+            // 1. Clean presentation text swap
+            if (title) title.innerText = "Phase 2: Automated AI MaxN Extraction";
+            if (desc) desc.innerText = "YOLO11 and ByteTrack channels are rendering tracking boxes natively.";
+            if (btn) btn.style.display = "none";
 
             // 2. Instantly switch the video source parameter to your smooth python output file
-            video.src = "tracked_sharks.mp4";
-            video.currentTime = 0;
-            video.play();
+            if (video) {
+                video.src = "tracked_sharks.mp4";
+                video.currentTime = 0;
+                video.play();
+            }
         }
     </script>
 </body>
