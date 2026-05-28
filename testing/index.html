@@ -12,7 +12,7 @@
         
         <div class="video-section">
             <div class="video-wrapper">
-                <video id="sharkVideo" src="temp_tracked.mp4" controls width="800" preload="auto"></video>
+                <video id="sharkVideo" src="sharks.mp4" controls width="800" preload="auto"></video>
             </div>
         </div>
 
@@ -39,7 +39,7 @@
 
             // 2. Clear out any old playing streams and force-load the new target asset structure
             video.pause();
-            video.src = "sharks.mp4";
+            video.src = "temp_tracked.mp4";
             video.load(); // Forces browser to establish network pipelines to the new file before playing
 
             // 3. ASYNCHRONOUS PROMISE HANDLING (From your documentation examples)
