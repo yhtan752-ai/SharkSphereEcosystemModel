@@ -40,6 +40,15 @@ async function runInferenceLoop() {
     if (video.paused || video.ended) {
         isProcessing = false;
         return;
+        
+        frameCounter++;
+    if (frameCounter % 4 !== 0) {
+        // Clear previous drawing frames canvas layers so boxes don't get stuck
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Re-draw the last detected boxes if you want, or keep it empty for speed
+        requestAnimationFrame(runInferenceLoop);
+        return;
     }
 
     // IF THE GPU IS STILL BUSY WITH THE PREVIOUS FRAME, SKIP THIS TICK (Prevents Freezing!)
